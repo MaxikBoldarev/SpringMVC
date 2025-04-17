@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.example.repository.CurrencyRepository;
 import org.example.model.CurrencyRate;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 
 import java.time.LocalDate;
@@ -19,6 +20,7 @@ public class CurrencyRateService {
 
     private final CurrencyService currencyService;
     private final CurrencyRateParserXml currencyRateParser;
+    private final WebArima webArima;
     private final String url = "https://cbr.ru/scripts/XML_daily.asp";
 
     private final CurrencyRepository currencyRepository;
@@ -31,7 +33,7 @@ public class CurrencyRateService {
         rates = currencyRateParser.parse(ratesAsXml);
         currencyRepository.deleteAll();
         currencyRepository.saveAll(rates);
-
+        webArima.sendRequest(date, currency);
         return rates.stream().filter(rate -> currency.equals(rate.getCharCode()))
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("Currency Rate not found. Currency:" + currency + ", date:" + date));
